@@ -219,32 +219,40 @@ class FitsImageDataProvider(ImageDataProvider):
 
     """
 
-    def __init__(self, search_path, a_min=None, a_max=None, data_suffix=".tif", mask_suffix='_mask.tif',
-                 shuffle_data=True, n_class=2):
+    def __init__(self, search_path, a_min=None, a_max=None, data_suffix=".tif", mask_suffix='_mask.tif', mask_suffix2='_mask.tif', mask_suffix3='_mask.tif',
+                 shuffle_data=True, n_class=2, IMAGE_SIZE = 200):
         super(ImageDataProvider, self).__init__(a_min, a_max)
         self.data_suffix = data_suffix
         self.mask_suffix = mask_suffix
+        self.mask_suffix2 = mask_suffix2
+        self.mask_suffix3 = mask_suffix3
+
         self.file_idx = -1
         self.shuffle_data = shuffle_data
         self.n_class = n_class
 
         self.data_files = self._find_data_files(search_path)
+        self.IMAGE_SIZE = IMAGE_SIZE
 
         if self.shuffle_data:
             np.random.shuffle(self.data_files)
 
-        assert len(self.data_files) > 0, "No training files"
+        #assert len(self.data_files) > 0, "No training files"
         print("Number of files used: %s" % len(self.data_files))
 
         img = self._load_file(self.data_files[0])
+        img = img[:IMAGE_SIZE, :IMAGE_SIZE]
         self.channels = 1 if len(img.shape) == 2 else img.shape[-1]
 
     def _find_data_files(self, search_path):
         all_files = glob.glob(search_path)
-        return [name for name in all_files if self.data_suffix in name and not self.mask_suffix in name]
+        print(search_path)
+        print(all_files)
+        return [name for name in all_files if self.data_suffix in name and not (self.mask_suffix in name or self.mask_suffix2 in name or self.mask_suffix3 in name)]
 
     def _load_file(self, path, dtype=np.float32):
         image = fits.getdata(path)
+        image = image[:self.IMAGE_SIZE, :self.IMAGE_SIZE]
         return image
         # return np.squeeze(cv2.imread(image_name, cv2.IMREAD_GRAYSCALE))
 
@@ -261,6 +269,8 @@ class FitsImageDataProvider(ImageDataProvider):
         label_name = image_name.replace(self.data_suffix, self.mask_suffix)
 
         img = self._load_file(image_name, np.float32)
+        img = img[:self.IMAGE_SIZE, :self.IMAGE_SIZE]
         label = self._load_file(label_name, np.bool)
+        label = label[:self.IMAGE_SIZE, :self.IMAGE_SIZE]
 
         return img, label
