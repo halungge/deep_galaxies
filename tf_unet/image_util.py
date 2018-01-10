@@ -248,7 +248,7 @@ class FitsImageDataProvider(ImageDataProvider):
         all_files = glob.glob(search_path)
         print(search_path)
         print(all_files)
-        return [name for name in all_files if self.data_suffix in name and not (self.mask_suffix in name or self.mask_suffix2 in name or self.mask_suffix3 in name)]
+        return [name for name in all_files if (self.data_suffix in name and ((not self.mask_suffix in name) and (not self.mask_suffix2 in name) and (not self.mask_suffix3 in name)))]
 
     def _load_file(self, path, dtype=np.float32):
         image = fits.getdata(path)
